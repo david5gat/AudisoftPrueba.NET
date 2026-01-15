@@ -126,12 +126,24 @@ namespace AudisoftPrueba.Controllers
             using var cmd = new SqlCommand(query, connection);
             cmd.Parameters.AddWithValue("@id", id);
 
-            int rows = cmd.ExecuteNonQuery();
+            try
+            {
+                int rows = cmd.ExecuteNonQuery();
 
-            if (rows == 0)
-                return NotFound($"No existe el profesor con id {id}");
+                if (rows == 0)
+                    return NotFound("No existe el estudiante");
 
-            return Ok("Profesor eliminado");
+                return Ok("Estudiante eliminado");
+            }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                return Conflict(new
+                {
+                    message = "No se puede eliminar el estudiante porque tiene notas asociadas.",
+                    code = "FK_CONSTRAINT",
+                    details = ex.Message
+                });
+            }
         }
     }
 }
